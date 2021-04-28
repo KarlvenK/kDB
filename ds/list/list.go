@@ -137,9 +137,99 @@ func (myList *List) LSet(key string, index int, val []byte) bool {
 	return true
 }
 
-/*
-do work here
-*/
+//LRange return list of key 中指定区间的元素，
+//如果start下标比最大下标还大， 则return空列表
+//如果end下标比len大，则将end修改为len - 1
+func (myList *List) LRange(key string, start, end int) (values [][]byte) {
+	item := myList.record[key]
+
+	if item == nil || item.Len() <= 0 {
+		return
+	}
+	length := item.Len()
+	start, end = myList.handleIndex(length, start, end)
+
+	mid := length >> 1
+
+	if end <= mid || end-mid < mid-start {
+		flag := 0
+		for p := item.Front(); p != nil && flag <= end; p, flag = p.Next(), flag+1 {
+			if flag >= start {
+				values = append(values, p.Value.([]byte))
+			}
+		}
+	} else {
+		flag := length - 1
+		for p := item.Back(); p != nil && flag >= start; p, flag = p.Prev(), flag-1 {
+			if flag <= end {
+				values = append(values, p.Value.([]byte))
+			}
+		}
+
+		if len(values) > 0 {
+			for i, j := 0, len(values)-1; i < j; i, j = i+1, j-1 {
+				values[i], values[j] = values[j], values[i]
+			}
+		}
+	}
+
+	return
+}
+
+//LTrim对一个列表进行修剪（trim),让列表值保留指定区间内的元素，不在指定区间内的元素都将被删除
+
+func (myList *List) LTrim(key string, start, end int) bool {
+	item := myList.record[key]
+	if item == nil || item.Len() <= 0 {
+		return false
+	}
+
+	length := item.Len()
+	start, end = myList.handleIndex(length, start, end)
+
+	if start <= 0 && end >= length-1 {
+		return false
+	}
+	//look below
+	if start > end || start >= length {
+		myList.record[key] = nil
+		return true
+	}
+
+	startEle, endEle := myList.index(key, start), myList.index(key, end)
+
+	if end-start+1 < (length >> 1) {
+		newList := list.New()
+		for p := startEle; p != endEle.Next(); p = p.Next() {
+			newList.PushBack(p.Value)
+		}
+
+		item = nil
+		myList.record[key] = newList
+	} else {
+		var ele []*list.Element
+		for p := item.Front(); p != startEle; p = p.Next() {
+			ele = append(ele, p)
+		}
+		for p := item.Back(); p != endEle; p = p.Prev() {
+			ele = append(ele, p)
+		}
+		for _, v := range ele {
+			item.Remove(v)
+		}
+		ele = nil
+	}
+	return true
+}
+
+// LLen 返回key的list的元素个数
+func (myList *List) LLen(key string) int {
+	length := 0
+	if myList.record[key] != nil {
+		length = myList.record[key].Len()
+	}
+	return length
+}
 
 func (myList *List) find(key string, val []byte) *list.Element {
 	item := myList.record[key]
@@ -240,6 +330,10 @@ func (myList *List) handleIndex(length, start, end int) (int, int) {
 	}
 
 	if end < 0 {
+		end += length
+	}
+
+	if start < 0 {
 		start = 0
 	}
 
