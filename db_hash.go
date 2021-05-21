@@ -10,3 +10,7 @@ type HashIdx struct {
 	mu      sync.RWMutex
 	indexes *hash.Hash
 }
+
+func newHashIdx() *HashIdx {
+	return &HashIdx{indexes: hash.New()}
+}

@@ -10,3 +10,7 @@ type ZsetIdx struct {
 	mu      sync.RWMutex
 	indexes *zset.SortedSet
 }
+
+func newZsetIdx() *ZsetIdx {
+	return &ZsetIdx{indexes: zset.New()}
+}

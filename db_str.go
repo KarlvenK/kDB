@@ -10,3 +10,7 @@ type StrIdx struct {
 	mu      sync.RWMutex
 	idxList *index.SkipList
 }
+
+func newStrIdx() *StrIdx {
+	return &StrIdx{idxList: index.NewSkipList()}
+}

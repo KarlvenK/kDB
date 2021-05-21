@@ -10,3 +10,7 @@ type SetIdx struct {
 	mu      sync.RWMutex
 	indexes *set.Set
 }
+
+func newSetIdx() *SetIdx {
+	return &SetIdx{indexes: set.New()}
+}
