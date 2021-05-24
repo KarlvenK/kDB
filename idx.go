@@ -1,9 +1,14 @@
 package kDB
 
+import (
+	"github.com/KarlvenK/kDB/index"
+	"time"
+)
+
 //DataType define the data type
 type DataType = uint16
 
-// five diferent data types
+// five different data types
 const (
 	String DataType = iota
 	List
@@ -30,9 +35,9 @@ const (
 	ListLTrim
 )
 
-//hash table operations
+// hash table operations
 const (
-	HashHset uint16 = iota
+	HashHSet uint16 = iota
 	HashHDel
 )
 
@@ -48,3 +53,21 @@ const (
 	ZSetZAdd uint16 = iota
 	ZSetZRem
 )
+
+//buildStringIndex build string indexes
+func (db *kDB) buildStringIndex(idx *index.Indexer, opt uint16) {
+	if db.listIndex == nil || idx == nil {
+		return
+	}
+
+	now := uint32(time.Now().Unix())
+	if deadline, exist := db.expires[string(idx.Meta.Key)]; exist && deadline <= now {
+		return
+	}
+	switch opt {
+	case StringSet:
+		db.strIndex.idxList.Put(idx.Meta.Key, idx)
+	case StringRem:
+		db.strIndex.idxList.Remove(idx.Meta.Key)
+	}
+}
