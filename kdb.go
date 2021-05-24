@@ -82,3 +82,61 @@ type (
 	//ArchivedFiles define the archived files
 	ArchivedFiles map[uint32]*storage.DBFile
 )
+
+func (db *kDB) checkKeyValue(key []byte, value ...[]byte) error {
+	keySize := uint32(len(key))
+	if keySize == 0 {
+		return ErrEmptyKey
+	}
+
+	config := db.config
+	if keySize > config.MaxKeySize {
+		return ErrKeyTooLarge
+	}
+
+	for _, v := range value {
+		if uint32(len(v)) > config.MaxValueSize {
+			return ErrValueTooLarge
+		}
+	}
+
+	return nil
+}
+
+//store entry to db file
+func (db *kDB) store(e *storage.Entry) error {
+	//sync the db file if file size is not enough, and open a new db file
+	config := db.config
+	if db.activeFile.Offset+int64(e.Size()) > config.BlockSize {
+		if err := db.activeFile.Sync(); err != nil {
+			return err
+		}
+
+		//save the old file
+		db.archFiles[db.activeFileID] = db.activeFile
+		activeFileID := db.activeFileID + 1
+
+		if dbFile, err := storage.NewDBFile(config.DirPath, activeFileID, config.RwMethod, config.BlockSize); err != nil {
+			return err
+		} else {
+			db.activeFile = dbFile
+			db.activeFileID = activeFileID
+			db.meta.ActiveWriteOff = 0
+		}
+	}
+
+	//write data to db file
+	if err := db.activeFile.Write(e); err != nil {
+		return err
+	}
+
+	db.meta.ActiveWriteOff = db.activeFile.Offset
+
+	//persist the data to disk
+	if config.Sync {
+		if err := db.activeFile.Sync(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
