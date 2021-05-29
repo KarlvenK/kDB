@@ -1,10 +1,12 @@
 package kDB
 
 import (
+	"bytes"
 	"github.com/KarlvenK/kDB/ds/list"
 	"github.com/KarlvenK/kDB/storage"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -125,4 +127,96 @@ func (db *kDB) LRem(key, value []byte, count int) (int, error) {
 	}
 
 	return res, nil
+}
+
+//LInsert insert element in the list stored at key either before or after the reference value pivot
+func (db *kDB) LInsert(key string, option list.InsertOption, pivot, val []byte) (count int, err error) {
+
+	if err = db.checkKeyValue([]byte(key), val); err != nil {
+		return
+	}
+
+	if strings.Contains(string(pivot), ExtraSeparator) {
+		return 0, ErrExtraContainsSeparator
+	}
+
+	db.listIndex.mu.Lock()
+	defer db.listIndex.mu.Unlock()
+
+	count = db.listIndex.indexes.LInsert(key, option, pivot, val)
+	if count != -1 {
+		var buf bytes.Buffer
+		buf.Write(pivot)
+		buf.Write([]byte(ExtraSeparator))
+		opt := strconv.Itoa(int(option))
+		buf.Write([]byte(opt))
+
+		e := storage.NewEntry([]byte(key), val, buf.Bytes(), List, ListLInsert)
+		if err = db.store(e); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+//LSet set the list element at index to element
+//return whether it is successful
+func (db *kDB) LSet(key []byte, idx int, val []byte) (bool, error) {
+	if err := db.checkKeyValue(key, val); err != nil {
+		return false, err
+	}
+
+	db.listIndex.mu.Lock()
+	defer db.listIndex.mu.Unlock()
+
+	i := strconv.Itoa(idx)
+	e := storage.NewEntry(key, val, []byte(i), List, ListLSet)
+	if err := db.store(e); err != nil {
+		return false, err
+	}
+
+	res := db.listIndex.indexes.LSet(string(key), idx, val)
+	return res, nil
+}
+
+//LTrim trim an existing list so that it will contain only the specified range of elements specified
+//Both start and stop are zero-based indexes, where 0 is the first element of the list(the head). 1 the next element and so on
+func (db *kDB) LTrim(key []byte, start, end int) error {
+	db.listIndex.mu.Lock()
+	defer db.listIndex.mu.Unlock()
+
+	if res := db.listIndex.indexes.LTrim(string(key), start, end); res {
+		var buf bytes.Buffer
+		buf.Write([]byte(strconv.Itoa(start)))
+		buf.Write([]byte(ExtraSeparator))
+		buf.Write([]byte(strconv.Itoa(end)))
+
+		e := storage.NewEntry(key, nil, buf.Bytes(), List, ListLTrim)
+		if err := db.store(e); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//LRange return the specified elements of the list stored at key
+func (db *kDB) LRange(key []byte, start, end int) ([][]byte, error) {
+	db.listIndex.mu.Lock()
+	defer db.listIndex.mu.Unlock()
+
+	if err := db.checkKeyValue(key, nil); err != nil {
+		return nil, err
+	}
+
+	return db.listIndex.indexes.LRange(string(key), start, end), nil
+}
+
+//LLen return the length of the list stored at key
+func (db *kDB) LLen(key []byte) int {
+	db.listIndex.mu.Lock()
+	defer db.listIndex.mu.Unlock()
+
+	return db.listIndex.indexes.LLen(string(key))
 }
