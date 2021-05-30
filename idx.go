@@ -119,3 +119,19 @@ func (db *kDB) buildListIndex(idx *index.Indexer, opt uint16) {
 		}
 	}
 }
+
+//buildHashIndex build hash indexes
+func (db *kDB) buildHashIndex(idx *index.Indexer, opt uint16) {
+	if db.hashIndex == nil || idx == nil {
+		return
+	}
+
+	key := string(idx.Meta.Key)
+
+	switch opt {
+	case HashHSet:
+		db.hashIndex.indexes.HSet(key, string(idx.Meta.Extra), idx.Meta.Value)
+	case HashHDel:
+		db.hashIndex.indexes.HDel(key, string(idx.Meta.Extra))
+	}
+}
