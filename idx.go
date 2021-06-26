@@ -3,6 +3,9 @@ package kDB
 import (
 	"github.com/KarlvenK/kDB/ds/list"
 	"github.com/KarlvenK/kDB/index"
+	"github.com/KarlvenK/kDB/utils"
+	"io"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -134,4 +137,87 @@ func (db *kDB) buildHashIndex(idx *index.Indexer, opt uint16) {
 	case HashHDel:
 		db.hashIndex.indexes.HDel(key, string(idx.Meta.Extra))
 	}
+}
+
+// buildSetIndex 建立集合索引
+// build set indexes
+func (db *kDB) buildSetIndex(idx *index.Indexer, opt uint16) {
+
+	if db.hashIndex == nil || idx == nil {
+		return
+	}
+
+	key := string(idx.Meta.Key)
+	switch opt {
+	case SetSAdd:
+		db.setIndex.indexes.SAdd(key, idx.Meta.Value)
+	case SetSRem:
+		db.setIndex.indexes.SRem(key, idx.Meta.Value)
+	case SetSMove:
+		extra := idx.Meta.Extra
+		db.setIndex.indexes.SMove(key, string(extra), idx.Meta.Value)
+	}
+}
+
+// buildZsetIndex 建立有序集合索引
+// build sorted set indexes
+func (db *kDB) buildZsetIndex(idx *index.Indexer, opt uint16) {
+
+	if db.hashIndex == nil || idx == nil {
+		return
+	}
+
+	key := string(idx.Meta.Key)
+	switch opt {
+	case ZSetZAdd:
+		if score, err := utils.StrToFloat64(string(idx.Meta.Extra)); err == nil {
+			db.zsetIndex.indexes.ZAdd(key, score, string(idx.Meta.Value))
+		}
+	case ZSetZRem:
+		db.zsetIndex.indexes.ZRem(key, string(idx.Meta.Value))
+	}
+}
+
+//loadIdxFromFiles load String、List、Hash、Set、ZSet indexes from files
+func (db *kDB) loadIdxFromFiles() error {
+	if db.archFiles == nil && db.activeFile == nil {
+		return nil
+	}
+
+	var fileIds []int
+	dbFile := make(ArchivedFiles)
+	for k, v := range db.archFiles {
+		dbFile[k] = v
+		fileIds = append(fileIds, int(k))
+	}
+
+	sort.Ints(fileIds)
+	for i := 0; i < len(fileIds); i++ {
+		fid := uint32(fileIds[i])
+		df := dbFile[fid]
+		var offset int64 = 0
+
+		for offset <= db.config.BlockSize {
+			if e, err := df.Read(offset); err == nil {
+				idx := &index.Indexer{
+					Meta:      e.Meta,
+					FileId:    fid,
+					EntrySize: e.Size(),
+					Offset:    offset,
+				}
+				offset += int64(e.Size())
+
+				if err := db.buildIndex(e, idx); err != nil {
+					return err
+				}
+			} else {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+		}
+	}
+
+	return nil
 }
