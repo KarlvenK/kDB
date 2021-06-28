@@ -2,6 +2,7 @@ package kDB
 
 import (
 	"errors"
+	"github.com/KarlvenK/kDB/index"
 	"github.com/KarlvenK/kDB/storage"
 	"os"
 	"sync"
@@ -83,6 +84,30 @@ type (
 	ArchivedFiles map[uint32]*storage.DBFile
 )
 
+func Open(config Config) (*kDB, error) {
+
+}
+
+func Reopen(path string) (*kDB, error) {
+
+}
+
+func (db *kDB) Close() error {
+
+}
+
+func (db *kDB) Sync() error {
+
+}
+
+func (db *kDB) Reclaim() (err error) {
+
+}
+
+func (db *kDB) Backup(dir string) (err error) {
+
+}
+
 func (db *kDB) checkKeyValue(key []byte, value ...[]byte) error {
 	keySize := uint32(len(key))
 	if keySize == 0 {
@@ -100,6 +125,36 @@ func (db *kDB) checkKeyValue(key []byte, value ...[]byte) error {
 		}
 	}
 
+	return nil
+}
+
+func (db *kDB) saveConfig() (err error) {
+
+}
+
+func (db *kDB) saveMeta() error {
+
+}
+
+//buildIndex 建立索引
+func (db *kDB) buildIndex(e *storage.Entry, idx *index.Indexer) error {
+	if db.config.IdxMode == KeyValueRamMode {
+		idx.Meta.Value = e.Meta.Value
+		idx.Meta.ValueSize = uint32(len(e.Meta.Value))
+	}
+
+	switch e.Type {
+	case storage.String:
+		db.buildStringIndex(idx, e.Mark)
+	case storage.List:
+		db.buildListIndex(idx, e.Mark)
+	case storage.Hash:
+		db.buildHashIndex(idx, e.Mark)
+	case storage.Set:
+		db.buildSetIndex(idx, e.Mark)
+	case storage.ZSet:
+		db.buildZsetIndex(idx, e.Mark)
+	}
 	return nil
 }
 
@@ -139,4 +194,8 @@ func (db *kDB) store(e *storage.Entry) error {
 		}
 	}
 	return nil
+}
+
+func (db *kDB) validEntry(e *storage.Entry, offset int64, fileId uint32) bool {
+
 }
