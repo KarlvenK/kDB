@@ -144,11 +144,11 @@ func Reopen(path string) (*kDB, error) {
 	}
 
 	var config Config
-	bytes, err := ioutil.ReadFile(path + configSaveFile)
+	Bytes, err := ioutil.ReadFile(path + configSaveFile)
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(bytes, &config); err != nil {
+	if err := json.Unmarshal(Bytes, &config); err != nil {
 		return nil, err
 	}
 	return Open(config)
@@ -199,7 +199,10 @@ func (db *kDB) Reclaim() (err error) {
 	if err := os.MkdirAll(reclaimPath, os.ModePerm); err != nil {
 		return err
 	}
-	defer os.RemoveAll(reclaimPath)
+	//defer os.RemoveAll(reclaimPath)
+	defer func() {
+		_ = os.RemoveAll(reclaimPath)
+	}()
 
 	var (
 		activeFileId uint32 = 0
@@ -272,7 +275,7 @@ func (db *kDB) Reclaim() (err error) {
 
 	for _, v := range newArchFiles {
 		name := storage.PathSeparator + fmt.Sprintf(storage.DBFileFormatName, v.Id)
-		os.Rename(reclaimPath+name, db.config.DirPath+name)
+		_ = os.Rename(reclaimPath+name, db.config.DirPath+name)
 	}
 
 	db.archFiles = newArchFiles
@@ -312,8 +315,8 @@ func (db *kDB) saveConfig() (err error) {
 	path := db.config.DirPath + configSaveFile
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 
-	bytes, err := json.Marshal(db.config)
-	_, err = file.Write(bytes)
+	Bytes, err := json.Marshal(db.config)
+	_, err = file.Write(Bytes)
 	err = file.Close()
 	return
 }
