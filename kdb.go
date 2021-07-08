@@ -1,11 +1,18 @@
 package kDB
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/KarlvenK/kDB/index"
 	"github.com/KarlvenK/kDB/storage"
+	"github.com/KarlvenK/kDB/utils"
+	"io"
+	"io/ioutil"
 	"os"
 	"sync"
+	"time"
 )
 
 var (
@@ -84,28 +91,200 @@ type (
 	ArchivedFiles map[uint32]*storage.DBFile
 )
 
+//Open 打开一个数据库实例
 func Open(config Config) (*kDB, error) {
+	//create the dirs if not it exists
+	if utils.Exist(config.DirPath) {
+		if err := os.MkdirAll(config.DirPath, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
+	//load the db files
+	archFiles, activeFileId, err := storage.Build(config.DirPath, config.RwMethod, config.BlockSize)
+	if err != nil {
+		return nil, err
+	}
 
+	activeFile, err := storage.NewDBFile(config.DirPath, activeFileId, config.RwMethod, config.BlockSize)
+	if err != nil {
+		return nil, err
+	}
+
+	//load expired directories
+	expires := storage.LoadExpires(config.DirPath + expireFile)
+
+	//load db meta info
+	meta := storage.LoadMeta(config.DirPath + dbMetaSaveFile)
+	activeFile.Offset = meta.ActiveWriteOff
+
+	db := &kDB{
+		activeFile:   activeFile,
+		activeFileID: activeFileId,
+		archFiles:    archFiles,
+		config:       config,
+		strIndex:     newStrIdx(),
+		meta:         meta,
+		listIndex:    newList(),
+		hashIndex:    newHashIdx(),
+		setIndex:     newSetIdx(),
+		zsetIndex:    newZsetIdx(),
+		expires:      expires,
+	}
+
+	//load indexers from files
+	if err := db.loadIdxFromFiles(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func Reopen(path string) (*kDB, error) {
+	if exist := utils.Exist(path + configSaveFile); !exist {
+		return nil, ErrCfgNotExist
+	}
 
+	var config Config
+	bytes, err := ioutil.ReadFile(path + configSaveFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(bytes, &config); err != nil {
+		return nil, err
+	}
+	return Open(config)
 }
 
+//Close 关闭数据库，保存config
 func (db *kDB) Close() error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
 
+	if err := db.saveConfig(); err != nil {
+		return err
+	}
+	if err := db.saveMeta(); err != nil {
+		return err
+	}
+	if err := db.expires.SaveExpires(db.config.DirPath + expireFile); err != nil {
+		return err
+	}
+
+	for _, archFile := range db.archFiles {
+		if err := archFile.Sync(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
+//Sync 数据持久化
 func (db *kDB) Sync() error {
+	if db == nil || db.activeFile == nil {
+		return nil
+	}
+	db.mu.RLock()
+	defer db.mu.RUnlock()
 
+	return db.activeFile.Sync()
 }
 
+//Reclaim 重新组织磁盘中的数据，回收磁盘空间
 func (db *kDB) Reclaim() (err error) {
+	if len(db.archFiles) < db.config.ReclaimThreshold {
+		return ErrReclaimUnreached
+	}
 
+	//新建临时目录， 用于暂存新的数据文件
+	reclaimPath := db.config.DirPath + reclaimPath
+	if err := os.MkdirAll(reclaimPath, os.ModePerm); err != nil {
+		return err
+	}
+	defer os.RemoveAll(reclaimPath)
+
+	var (
+		activeFileId uint32 = 0
+		newArchFiles        = make(ArchivedFiles)
+		df           *storage.DBFile
+	)
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	for _, file := range db.archFiles {
+		var offset int64 = 0
+		var reclaimEntries []*storage.Entry
+
+		var dfFile *os.File
+		dfFile, err = os.Open(file.File.Name())
+		if err != nil {
+			return err
+		}
+		file.File = dfFile
+		fileId := file.Id
+
+		for {
+			if e, err := file.Read(offset); err == nil {
+				//check if the entry is valid
+				if db.validEntry(e, offset, fileId) {
+					reclaimEntries = append(reclaimEntries, e)
+				}
+				offset += int64(e.Size())
+			} else {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+		}
+
+		//rewrite entry to the db file
+		if len(reclaimEntries) > 0 {
+			for _, entry := range reclaimEntries {
+				if df == nil || int64(entry.Size())+df.Offset > db.config.BlockSize {
+					df, err := storage.NewDBFile(reclaimPath, activeFileId, db.config.RwMethod, db.config.BlockSize)
+					if err != nil {
+						return err
+					}
+
+					newArchFiles[activeFileId] = df
+					activeFileId++
+				}
+
+				if err = df.Write(entry); err != nil {
+					return
+				}
+
+				//update string indexers
+				if entry.Type == String {
+					item := db.strIndex.idxList.Get(entry.Meta.Key)
+					idx := item.Value().(*index.Indexer)
+					idx.Offset = df.Offset - int64(entry.Size())
+					idx.FileId = activeFileId
+					db.strIndex.idxList.Put(idx.Meta.Key, idx)
+				}
+			}
+		}
+	}
+	//删除旧的数据，临时目录拷贝位新的数据文件
+	//delete the old db files, and copy the directory as new db files
+	for _, v := range db.archFiles {
+		_ = os.Remove(v.File.Name())
+	}
+
+	for _, v := range newArchFiles {
+		name := storage.PathSeparator + fmt.Sprintf(storage.DBFileFormatName, v.Id)
+		os.Rename(reclaimPath+name, db.config.DirPath+name)
+	}
+
+	db.archFiles = newArchFiles
+	return
 }
 
+//Backup 复制数据库目录，用于备份
 func (db *kDB) Backup(dir string) (err error) {
-
+	if utils.Exist(db.config.DirPath) {
+		err = utils.CopyFile(db.config.DirPath, dir)
+	}
+	return
 }
 
 func (db *kDB) checkKeyValue(key []byte, value ...[]byte) error {
@@ -128,12 +307,20 @@ func (db *kDB) checkKeyValue(key []byte, value ...[]byte) error {
 	return nil
 }
 
+//saveConfig 关闭数据库之前保存配置
 func (db *kDB) saveConfig() (err error) {
+	path := db.config.DirPath + configSaveFile
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 
+	bytes, err := json.Marshal(db.config)
+	_, err = file.Write(bytes)
+	err = file.Close()
+	return
 }
 
 func (db *kDB) saveMeta() error {
-
+	metaPath := db.config.DirPath + dbMetaSaveFile
+	return db.meta.Store(metaPath)
 }
 
 //buildIndex 建立索引
@@ -196,6 +383,67 @@ func (db *kDB) store(e *storage.Entry) error {
 	return nil
 }
 
+//validEntry 判断entry所属的操作标识（增、改类型操作），以及val是否有效
 func (db *kDB) validEntry(e *storage.Entry, offset int64, fileId uint32) bool {
+	if e == nil {
+		return false
+	}
+	mark := e.Mark
+	switch e.Type {
+	case String:
+		if mark == StringSet {
+			// expired key is invalid
+			now := uint32(time.Now().Unix())
+			if deadline, exist := db.expires[string(e.Meta.Key)]; exist && deadline < now {
+				return false
+			}
 
+			//check the data position
+			node := db.strIndex.idxList.Get(e.Meta.Key)
+			if node == nil {
+				return false
+			}
+			indexer := node.Value().(*index.Indexer)
+			if bytes.Compare(indexer.Meta.Key, e.Meta.Key) == 0 {
+				if indexer == nil || indexer.FileId != fileId || indexer.Offset != offset {
+					return false
+				}
+			}
+
+			if val, err := db.Get(e.Meta.Key); err == nil && string(val) == string(e.Meta.Value) {
+				return true
+			}
+		}
+	case List:
+		if mark == ListLPush || mark == ListRPush || mark == ListLInsert || mark == ListLSet {
+			return true
+		}
+	case Hash:
+		if mark == HashHSet {
+			if val := db.HGet(e.Meta.Key, e.Meta.Extra); string(val) == string(e.Meta.Value) {
+				return true
+			}
+		}
+	case Set:
+		if mark == SetSMove {
+			if db.SIsMember(e.Meta.Extra, e.Meta.Value) {
+				return true
+			}
+		}
+		if mark == SetSAdd {
+			if db.SIsMember(e.Meta.Key, e.Meta.Value) {
+				return true
+			}
+		}
+	case ZSet:
+		if mark == ZSetZAdd {
+			if val, err := utils.StrToFloat64(string(e.Meta.Extra)); err == nil {
+				score := db.ZScore(e.Meta.Key, e.Meta.Value)
+				if score == val {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
