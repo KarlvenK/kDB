@@ -31,9 +31,9 @@ type (
 	//Entry 数据entry定义
 	Entry struct {
 		Meta  *Meta
-		Type  uint16
-		Mark  uint16
-		crc32 uint32
+		Type  uint16 //data type
+		Mark  uint16 //data operation type
+		crc32 uint32 //check sum
 	}
 	//Meta meta 数据
 	Meta struct {

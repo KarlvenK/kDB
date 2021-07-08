@@ -52,6 +52,14 @@ func (db *kDB) HSetNx(key, field, value []byte) (res bool, err error) {
 	return
 }
 
+//HGet 返回哈希表中给定域的值
+func (db *kDB) HGet(key, field []byte) []byte {
+	db.hashIndex.mu.RLock()
+	defer db.hashIndex.mu.RUnlock()
+
+	return db.hashIndex.indexes.HGet(string(key), string(field))
+}
+
 //HGetAll return all fields and values of the stored at key
 func (db *kDB) HGetAll(key []byte) [][]byte {
 	db.hashIndex.mu.Lock()
