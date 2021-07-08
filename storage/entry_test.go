@@ -35,7 +35,7 @@ func TestEntry_Encode(t *testing.T) {
 
 		//写入文件为了测试下面的Decode方法
 		if encVal != nil {
-			file, _ := os.OpenFile("/tmp/rosedb/test.dat", os.O_CREATE|os.O_WRONLY, 0644)
+			file, _ := os.OpenFile("/tmp/kdb/test.dat", os.O_CREATE|os.O_WRONLY, 0644)
 			file.Write(encVal)
 		}
 	})

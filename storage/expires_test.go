@@ -12,14 +12,14 @@ func TestExpires_SaveExpires(t *testing.T) {
 	expires["key_003"] = 2312223
 	expires["key_005"] = 7312223
 
-	err := expires.SaveExpires("/tmp/rosedb/db.expires")
+	err := expires.SaveExpires("/tmp/kdb/db.expires")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestLoadExpires(t *testing.T) {
-	newExpires := LoadExpires("/tmp/rosedb/db.expires")
+	newExpires := LoadExpires("/tmp/kdb/db.expires")
 	t.Logf("%+v\n", newExpires)
 	for k, v := range newExpires {
 		fmt.Println(k, ":", v)

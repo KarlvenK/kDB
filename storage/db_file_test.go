@@ -7,20 +7,20 @@ import (
 )
 
 const (
-	path1            = "/tmp/rosedb"
+	path1            = "/tmp/kdb"
 	fileID1          = 0
-	path2            = "/tmp/rosedb"
+	path2            = "/tmp/kdb"
 	fileID2          = 1
 	defaultBlockSize = 8 * 1024 * 1024
 )
 
 func init() {
 	os.MkdirAll(path1, os.ModePerm)
-	_, err := os.OpenFile("/tmp/rosedb/000000000.data", os.O_CREATE|os.O_RDWR, os.ModePerm)
+	_, err := os.OpenFile("/tmp/kdb/000000000.data", os.O_CREATE|os.O_RDWR, os.ModePerm)
 	if err != nil {
 		log.Println("create file err. ", err)
 	}
-	os.OpenFile("/tmp/rosedb/000000001.data", os.O_CREATE|os.O_RDWR, os.ModePerm)
+	os.OpenFile("/tmp/kdb/000000001.data", os.O_CREATE|os.O_RDWR, os.ModePerm)
 }
 
 func TestNewDBFile(t *testing.T) {
@@ -58,7 +58,7 @@ func TestDBFile_Close(t *testing.T) {
 }
 
 func TestBuild(t *testing.T) {
-	path := "/tmp/rosedb"
+	path := "/tmp/kdb"
 	_, _, err := Build(path, FileIO, defaultBlockSize)
 	if err != nil {
 		log.Fatal(err)

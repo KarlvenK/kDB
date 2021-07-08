@@ -17,49 +17,49 @@ import (
 
 var (
 	// ErrEmptyKey the key is empty
-	ErrEmptyKey = errors.New("rosedb: the key is empty")
+	ErrEmptyKey = errors.New("kdb: the key is empty")
 
 	// ErrKeyNotExist key not exist
-	ErrKeyNotExist = errors.New("rosedb: key not exist")
+	ErrKeyNotExist = errors.New("kdb: key not exist")
 
 	// ErrKeyTooLarge the key too large
-	ErrKeyTooLarge = errors.New("rosedb: key exceeded the max length")
+	ErrKeyTooLarge = errors.New("kdb: key exceeded the max length")
 
 	// ErrValueTooLarge the value too large
-	ErrValueTooLarge = errors.New("rosedb: value exceeded the max length")
+	ErrValueTooLarge = errors.New("kdb: value exceeded the max length")
 
 	// ErrNilIndexer the indexer is nil
-	ErrNilIndexer = errors.New("rosedb: indexer is nil")
+	ErrNilIndexer = errors.New("kdb: indexer is nil")
 
 	// ErrCfgNotExist the config is not exist
-	ErrCfgNotExist = errors.New("rosedb: the config file not exist")
+	ErrCfgNotExist = errors.New("kdb: the config file not exist")
 
 	// ErrReclaimUnreached not ready to reclaim
-	ErrReclaimUnreached = errors.New("rosedb: unused space not reach the threshold")
+	ErrReclaimUnreached = errors.New("kdb: unused space not reach the threshold")
 
 	// ErrExtraContainsSeparator extra contains separator
-	ErrExtraContainsSeparator = errors.New("rosedb: extra contains separator \\0")
+	ErrExtraContainsSeparator = errors.New("kdb: extra contains separator \\0")
 
 	// ErrInvalidTTL ttl is invalid
-	ErrInvalidTTL = errors.New("rosedb: invalid ttl")
+	ErrInvalidTTL = errors.New("kdb: invalid ttl")
 
 	// ErrKeyExpired the key is expired
-	ErrKeyExpired = errors.New("rosedb: key is expired")
+	ErrKeyExpired = errors.New("kdb: key is expired")
 )
 
 const (
 
 	// 保存配置的文件名称
-	// rosedb config save path
+	// kdb config save path
 	configSaveFile = string(os.PathSeparator) + "db.cfg"
 
 	// 保存数据库相关信息的文件名称
-	// rosedb meta info save path
+	// kdb meta info save path
 	dbMetaSaveFile = string(os.PathSeparator) + "db.meta"
 
 	// 回收磁盘空间时的临时目录
-	// rosedb reclaim path
-	reclaimPath = string(os.PathSeparator) + "rosedb_reclaim"
+	// kdb reclaim path
+	reclaimPath = string(os.PathSeparator) + "kdb_reclaim"
 
 	// 保存过期字典的文件名称
 	// expired directory save path
@@ -94,7 +94,7 @@ type (
 //Open 打开一个数据库实例
 func Open(config Config) (*kDB, error) {
 	//create the dirs if not it exists
-	if utils.Exist(config.DirPath) {
+	if !utils.Exist(config.DirPath) {
 		if err := os.MkdirAll(config.DirPath, os.ModePerm); err != nil {
 			return nil, err
 		}
@@ -240,7 +240,7 @@ func (db *kDB) Reclaim() (err error) {
 		if len(reclaimEntries) > 0 {
 			for _, entry := range reclaimEntries {
 				if df == nil || int64(entry.Size())+df.Offset > db.config.BlockSize {
-					df, err := storage.NewDBFile(reclaimPath, activeFileId, db.config.RwMethod, db.config.BlockSize)
+					df, err = storage.NewDBFile(reclaimPath, activeFileId, db.config.RwMethod, db.config.BlockSize)
 					if err != nil {
 						return err
 					}
@@ -282,7 +282,7 @@ func (db *kDB) Reclaim() (err error) {
 //Backup 复制数据库目录，用于备份
 func (db *kDB) Backup(dir string) (err error) {
 	if utils.Exist(db.config.DirPath) {
-		err = utils.CopyFile(db.config.DirPath, dir)
+		err = utils.CopyDir(db.config.DirPath, dir)
 	}
 	return
 }
