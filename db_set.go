@@ -29,7 +29,7 @@ func (db *kDB) SAdd(key []byte, members ...[]byte) (res int, err error) {
 
 	for _, m := range members {
 		e := storage.NewEntryNoExtra(key, m, Set, SetSAdd)
-		if err := db.store(e); err != nil {
+		if err = db.store(e); err != nil {
 			return
 		}
 
