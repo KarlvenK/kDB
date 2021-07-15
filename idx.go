@@ -62,7 +62,7 @@ const (
 
 //buildStringIndex build string indexes
 func (db *kDB) buildStringIndex(idx *index.Indexer, opt uint16) {
-	if db.listIndex == nil || idx == nil {
+	if db.strIndex == nil || idx == nil {
 		return
 	}
 
