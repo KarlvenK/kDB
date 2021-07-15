@@ -1,3 +1,3 @@
 # kDB
 
-a simple kv database
+a kv database based on bitcask
