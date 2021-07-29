@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestRoseDB_SAdd(t *testing.T) {
+func TestKDB_SAdd(t *testing.T) {
 	var key = "my_set"
 
 	t.Run("normal situation", func(t *testing.T) {
@@ -43,7 +43,7 @@ func TestRoseDB_SAdd(t *testing.T) {
 	//})
 }
 
-func TestRoseDB_SPop(t *testing.T) {
+func TestKDB_SPop(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -55,7 +55,7 @@ func TestRoseDB_SPop(t *testing.T) {
 	}
 }
 
-func TestRoseDB_SCard(t *testing.T) {
+func TestKDB_SCard(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -69,7 +69,7 @@ func TestRoseDB_SCard(t *testing.T) {
 	t.Log(card1)
 }
 
-func TestRoseDB_SIsMember(t *testing.T) {
+func TestKDB_SIsMember(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -79,7 +79,7 @@ func TestRoseDB_SIsMember(t *testing.T) {
 	t.Log(db.SIsMember(key, []byte("not exist one")))
 }
 
-func TestRoseDB_SMembers(t *testing.T) {
+func TestKDB_SMembers(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -91,7 +91,7 @@ func TestRoseDB_SMembers(t *testing.T) {
 	}
 }
 
-func TestRoseDB_SRem(t *testing.T) {
+func TestKDB_SRem(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -102,7 +102,7 @@ func TestRoseDB_SRem(t *testing.T) {
 	t.Log(db.SRem(key, []byte("not exist one")))
 }
 
-func TestRoseDB_SRandMember(t *testing.T) {
+func TestKDB_SRandMember(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	var key = []byte("my_set")
@@ -119,7 +119,7 @@ func TestRoseDB_SRandMember(t *testing.T) {
 	randMem(-20)
 }
 
-func TestRoseDB_SDiff(t *testing.T) {
+func TestKDB_SDiff(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -133,7 +133,7 @@ func TestRoseDB_SDiff(t *testing.T) {
 	db.SDiff(keys...)
 }
 
-func TestRoseDB_SMove(t *testing.T) {
+func TestKDB_SMove(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -147,7 +147,7 @@ func TestRoseDB_SMove(t *testing.T) {
 	db.SMove(key1, key2, []byte("1"))
 }
 
-func TestRoseDB_SUnion(t *testing.T) {
+func TestKDB_SUnion(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 

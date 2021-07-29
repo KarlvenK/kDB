@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestRoseDB_LPush(t *testing.T) {
+func TestKDB_LPush(t *testing.T) {
 
 	t.Run("normal situation", func(t *testing.T) {
 		db := InitDb()
@@ -62,7 +62,7 @@ func TestRoseDB_LPush(t *testing.T) {
 	//})
 }
 
-func TestRoseDB_LPop(t *testing.T) {
+func TestKDB_LPop(t *testing.T) {
 	key := []byte("mylist")
 
 	t.Run("normal", func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestRoseDB_LPop(t *testing.T) {
 	//})
 }
 
-func TestRoseDB_RPush(t *testing.T) {
+func TestKDB_RPush(t *testing.T) {
 
 	t.Run("normal situation", func(t *testing.T) {
 		db := InitDb()
@@ -139,7 +139,7 @@ func TestRoseDB_RPush(t *testing.T) {
 	//})
 }
 
-func TestRoseDB_RPop(t *testing.T) {
+func TestKDB_RPop(t *testing.T) {
 	key := []byte("mylist")
 
 	t.Run("normal", func(t *testing.T) {
@@ -161,7 +161,7 @@ func TestRoseDB_RPop(t *testing.T) {
 	})
 }
 
-func TestRoseDB_LIndex(t *testing.T) {
+func TestKDB_LIndex(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -177,7 +177,7 @@ func TestRoseDB_LIndex(t *testing.T) {
 	t.Log(string(db.LIndex(key, -3)))
 }
 
-func TestRoseDB_LRange(t *testing.T) {
+func TestKDB_LRange(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -200,7 +200,7 @@ func TestRoseDB_LRange(t *testing.T) {
 	lrange(50, 100)
 }
 
-func TestRoseDB_LRem(t *testing.T) {
+func TestKDB_LRem(t *testing.T) {
 
 	t.Run("normal situation", func(t *testing.T) {
 		db := InitDb()
@@ -237,7 +237,7 @@ func TestRoseDB_LRem(t *testing.T) {
 	})
 }
 
-func TestRoseDB_LInsert(t *testing.T) {
+func TestKDB_LInsert(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -245,7 +245,7 @@ func TestRoseDB_LInsert(t *testing.T) {
 	db.LInsert("123", list.After, []byte("11\\0"), nil)
 
 	key := []byte("mylist")
-	count, err := db.LInsert(string(key), list.Before, []byte("list_data_0011"), []byte("I am roseduan"))
+	count, err := db.LInsert(string(key), list.Before, []byte("list_data_0011"), []byte("I am kduan"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestRoseDB_LInsert(t *testing.T) {
 	}
 }
 
-func TestRoseDB_LSet(t *testing.T) {
+func TestKDB_LSet(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -273,7 +273,7 @@ func TestRoseDB_LSet(t *testing.T) {
 	t.Log(ok, err)
 }
 
-func TestRoseDB_LTrim(t *testing.T) {
+func TestKDB_LTrim(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -285,7 +285,7 @@ func TestRoseDB_LTrim(t *testing.T) {
 	}
 }
 
-func TestRoseDB_LLen(t *testing.T) {
+func TestKDB_LLen(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 

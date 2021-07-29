@@ -19,7 +19,7 @@ func TestExist1(t *testing.T) {
 
 func TestExist2(t *testing.T) {
 	//目录是否存在
-	path := "/tmp/rosedb"
+	path := "/tmp/kdb"
 
 	t.Log(Exist(path))
 
@@ -30,8 +30,8 @@ func TestExist2(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
-	//src := "/Users/roseduan/resources/books/skiplist cookbook.pdf"
-	//dst := "/Users/roseduan/resources/books/skiplist cookbook-bak.pdf"
+	//src := "/Users/kduan/resources/books/skiplist cookbook.pdf"
+	//dst := "/Users/kduan/resources/books/skiplist cookbook-bak.pdf"
 	//
 	//err := CopyFile(src, dst)
 	//if err != nil {
@@ -40,8 +40,8 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestCopyDir(t *testing.T) {
-	//src := "/Users/roseduan/resources/books-new"
-	//dst := "/Users/roseduan/resources/books-new2"
+	//src := "/Users/kduan/resources/books-new"
+	//dst := "/Users/kduan/resources/books-new2"
 	//
 	//err := CopyDir(src, dst)
 	//if err != nil {

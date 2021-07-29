@@ -32,14 +32,14 @@ func PrintListData(lis *List) {
 func TestList_LPush(t *testing.T) {
 	list := InitList()
 
-	size := list.LPush(key, []byte("rosedb"))
+	size := list.LPush(key, []byte("kdb"))
 	PrintListData(list)
 	t.Log("size = ", size)
 }
 
 func TestList_RPush(t *testing.T) {
 	list := InitList()
-	size := list.RPush(key, []byte("rose"), []byte("database"))
+	size := list.RPush(key, []byte("k"), []byte("database"))
 
 	PrintListData(list)
 	t.Log("size = ", size)

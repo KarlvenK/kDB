@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestRoseDB_ZAdd(t *testing.T) {
+func TestKDB_ZAdd(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
 	key := []byte("my_zset")
-	err := db.ZAdd(key, 310.23, []byte("roseduan"))
+	err := db.ZAdd(key, 310.23, []byte("kduan"))
 
 	db.ZAdd(nil, 0, nil)
 	db.ZAdd(key, 30.234554, []byte("Java"))
@@ -27,7 +27,7 @@ func TestRoseDB_ZAdd(t *testing.T) {
 	}
 }
 
-func TestRoseDB_ZRem(t *testing.T) {
+func TestKDB_ZRem(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
@@ -37,16 +37,16 @@ func TestRoseDB_ZRem(t *testing.T) {
 	_, _ = db.ZRem(key, []byte("Java"))
 }
 
-func TestRoseDB_ZScore(t *testing.T) {
+func TestKDB_ZScore(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
 
-	s := db.ZScore(key, []byte("roseduan"))
+	s := db.ZScore(key, []byte("kduan"))
 	t.Log(s)
 }
 
-func TestRoseDB_ZCard(t *testing.T) {
+func TestKDB_ZCard(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
@@ -54,7 +54,7 @@ func TestRoseDB_ZCard(t *testing.T) {
 	t.Log(db.ZCard(key))
 }
 
-func TestRoseDB_ZRank(t *testing.T) {
+func TestKDB_ZRank(t *testing.T) {
 	db := ReopenDb()
 	db.Close()
 	key := []byte("my_zset")
@@ -64,10 +64,10 @@ func TestRoseDB_ZRank(t *testing.T) {
 	t.Log(rank)
 
 	t.Log(db.ZRank(key, []byte("Java")))
-	t.Log(db.ZRank(key, []byte("roseduan")))
+	t.Log(db.ZRank(key, []byte("kduan")))
 }
 
-func TestRoseDB_ZRevRank(t *testing.T) {
+func TestKDB_ZRevRank(t *testing.T) {
 	db := ReopenDb()
 	db.Close()
 	key := []byte("my_zset")
@@ -77,10 +77,10 @@ func TestRoseDB_ZRevRank(t *testing.T) {
 	t.Log(rank)
 
 	t.Log(db.ZRevRank(key, []byte("Java")))
-	t.Log(db.ZRevRank(key, []byte("roseduan")))
+	t.Log(db.ZRevRank(key, []byte("kduan")))
 }
 
-func TestRoseDB_ZRange(t *testing.T) {
+func TestKDB_ZRange(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
@@ -92,7 +92,7 @@ func TestRoseDB_ZRange(t *testing.T) {
 	}
 }
 
-func TestRoseDB_ZRevRange(t *testing.T) {
+func TestKDB_ZRevRange(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
@@ -104,7 +104,7 @@ func TestRoseDB_ZRevRange(t *testing.T) {
 	}
 }
 
-func TestRoseDB_ZIncrBy(t *testing.T) {
+func TestKDB_ZIncrBy(t *testing.T) {
 
 	db := ReopenDb()
 	defer db.Close()
@@ -120,7 +120,7 @@ func TestRoseDB_ZIncrBy(t *testing.T) {
 	t.Log(db.ZScore(key, []byte("Java")))
 }
 
-func TestRoseDB_ZGetByRank(t *testing.T) {
+func TestKDB_ZGetByRank(t *testing.T) {
 
 	db := ReopenDb()
 	defer db.Close()
@@ -139,7 +139,7 @@ func TestRoseDB_ZGetByRank(t *testing.T) {
 	getRank(2)
 }
 
-func TestRoseDB_ZRevGetByRank(t *testing.T) {
+func TestKDB_ZRevGetByRank(t *testing.T) {
 
 	db := ReopenDb()
 	defer db.Close()
@@ -155,7 +155,7 @@ func TestRoseDB_ZRevGetByRank(t *testing.T) {
 	getRevRank(9)
 }
 
-func TestRoseDB_ZScoreRange(t *testing.T) {
+func TestKDB_ZScoreRange(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")
@@ -173,7 +173,7 @@ func TestRoseDB_ZScoreRange(t *testing.T) {
 	scoreRange(200, 500)
 }
 
-func TestRoseDB_ZRevScoreRange(t *testing.T) {
+func TestKDB_ZRevScoreRange(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 	key := []byte("my_zset")

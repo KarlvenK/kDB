@@ -14,7 +14,7 @@ func Test_kDB_HSet(t *testing.T) {
 
 		db.HSet(nil, nil, nil)
 
-		_, _ = db.HSet([]byte(key), []byte("my_name"), []byte("roseduan"))
+		_, _ = db.HSet([]byte(key), []byte("my_name"), []byte("kduan"))
 	})
 
 	t.Run("reopen and set", func(t *testing.T) {
