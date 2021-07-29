@@ -81,7 +81,7 @@ func TestEntry_Encode(t *testing.T) {
 
 func TestDecode(t *testing.T) {
 	//expected val : [169 64 25 4 0 0 0 13 0 0 0 15 116 101 115 116 95 107 101 121 95 48 48 48 49 116 101 115 116 95 118 97 108 117 101 95 48 48 48 49]
-	if file, err := os.OpenFile("/tmp/rosedb/test.dat", os.O_RDONLY, os.ModePerm); err != nil {
+	if file, err := os.OpenFile("/tmp/kdb/test.dat", os.O_RDONLY, os.ModePerm); err != nil {
 		t.Error("open File err ", err)
 	} else {
 		buf := make([]byte, entryHeaderSize)

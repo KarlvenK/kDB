@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestRoseDB_Set(t *testing.T) {
+func TestKDB_Set(t *testing.T) {
 
 	t.Run("normal situation", func(t *testing.T) {
 		db := InitDb()
@@ -17,7 +17,7 @@ func TestRoseDB_Set(t *testing.T) {
 
 		db.Set(nil, nil)
 
-		err := db.Set([]byte("test_key"), []byte("I am roseduan"))
+		err := db.Set([]byte("test_key"), []byte("I am kduan"))
 		if err != nil {
 			log.Fatal("write data error ", err)
 		}
@@ -46,7 +46,7 @@ func TestRoseDB_Set(t *testing.T) {
 	})
 }
 
-func TestRoseDB_SetNx(t *testing.T) {
+func TestKDB_SetNx(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -60,7 +60,7 @@ func TestRoseDB_SetNx(t *testing.T) {
 	t.Log(string(val2))
 }
 
-func TestRoseDB_Get(t *testing.T) {
+func TestKDB_Get(t *testing.T) {
 
 	t.Run("normal situation", func(t *testing.T) {
 		db := ReopenDb()
@@ -109,7 +109,7 @@ func TestRoseDB_Get(t *testing.T) {
 	//})
 }
 
-func TestRoseDB_GetSet(t *testing.T) {
+func TestKDB_GetSet(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -128,7 +128,7 @@ func TestRoseDB_GetSet(t *testing.T) {
 	db.GetSet([]byte("test_key004"), nil)
 }
 
-func TestRoseDB_Append(t *testing.T) {
+func TestKDB_Append(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -145,7 +145,7 @@ func TestRoseDB_Append(t *testing.T) {
 	t.Log(string(val))
 }
 
-func TestRoseDB_StrLen(t *testing.T) {
+func TestKDB_StrLen(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -159,7 +159,7 @@ func TestRoseDB_StrLen(t *testing.T) {
 	db.StrLen([]byte("111"))
 }
 
-func TestRoseDB_PrefixScan(t *testing.T) {
+func TestKDB_PrefixScan(t *testing.T) {
 	db := InitDb()
 	defer db.Close()
 
@@ -193,7 +193,7 @@ func TestRoseDB_PrefixScan(t *testing.T) {
 	findPrefix(2, -1)
 }
 
-func TestRoseDB_RangeScan(t *testing.T) {
+func TestKDB_RangeScan(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -218,7 +218,7 @@ func TestRoseDB_RangeScan(t *testing.T) {
 	}
 }
 
-func TestRoseDB_Expire(t *testing.T) {
+func TestKDB_Expire(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -258,12 +258,12 @@ func TestRoseDB_Expire(t *testing.T) {
 	//desc()
 }
 
-func TestRoseDB_Persist(t *testing.T) {
+func TestKDB_Persist(t *testing.T) {
 	db := InitDb()
 	defer db.Close()
 
 	key := []byte("my_name4")
-	_ = db.Append(key, []byte("I am roseduan "))
+	_ = db.Append(key, []byte("I am Kduan "))
 
 	db.Expire(key, 10)
 	db.Persist(key)
@@ -281,7 +281,7 @@ func TestRoseDB_Persist(t *testing.T) {
 	//db.Persist(key)
 }
 
-func TestRoseDB_Expire2(t *testing.T) {
+func TestKDB_Expire2(t *testing.T) {
 	db := ReopenDb()
 	defer db.Close()
 
@@ -313,7 +313,7 @@ func TestDoSet(t *testing.T) {
 	fmt.Println("val = ", string(val))
 }
 
-func TestRoseDB_StrExists(t *testing.T) {
+func TestKDB_StrExists(t *testing.T) {
 	db := InitDb()
 	defer db.Close()
 
@@ -321,7 +321,7 @@ func TestRoseDB_StrExists(t *testing.T) {
 	_ = db.StrExists([]byte("11111"))
 }
 
-func TestRoseDB_StrRem(t *testing.T) {
+func TestKDB_StrRem(t *testing.T) {
 	db := InitDb()
 	defer db.Close()
 
@@ -329,18 +329,18 @@ func TestRoseDB_StrRem(t *testing.T) {
 	_ = db.StrRem([]byte("11111"))
 
 	key := []byte("bb-aa")
-	db.Set(key, []byte("rosedb"))
+	db.Set(key, []byte("Kdb"))
 	db.StrRem(key)
 }
 
-func TestRoseDB_TTL(t *testing.T) {
+func TestKDB_TTL(t *testing.T) {
 	db := InitDb()
 	defer db.Close()
 
 	db.TTL([]byte("1"))
 }
 
-func TestRoseDB_Get2(t *testing.T) {
+func TestKDB_Get2(t *testing.T) {
 	config := DefaultConfig()
 	db, err := Open(config)
 	if err != nil {
@@ -397,7 +397,7 @@ func TestOpen3(t *testing.T) {
 	writeLargeData(db, t)
 }
 
-func TestRoseDB_Reclaim2(t *testing.T) {
+func TestKDB_Reclaim2(t *testing.T) {
 	db, _ := Reopen("bench/kdb")
 	defer db.Close()
 
